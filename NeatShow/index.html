@@ -1,0 +1,121 @@
+<html>
+    <head>
+        <title>JG NEAT Show</title>
+        <meta charset="utf-8">
+        <link rel="stylesheet" href="res/style.css">
+        <script src="res/file_process.js"></script>
+        <script src="res/render.js"></script>
+        <script src="res/index.js"></script>
+    </head>
+    <body>
+        <nav id="controls">
+            <div class="info">
+                <h1 id="generation">Generation: </h1>
+                <div>
+                    <span id="inputsize">Input: </span>
+                    <span id="outputsize">Output: </span>
+                </div>
+                <h5 id="population">Population size: </h5>
+            </div>
+            <div>
+                <h4 id="net">Network: </h4>
+                <button onclick="show(index - 1)">Previous</button>
+                <button onclick="show(index + 1)">Next</button>
+            </div>
+            <div class="expand_control_box">
+                <table>
+                    <tr>
+                        <td>
+                            <label for="neuronRadio">Neuron radius</label>
+                        </td>
+                        <td>
+                            <input id="neuronRadio" type="range" min="5" max="20" value="15" onchange="show(index)">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <label for="outputRadio">Neuron output radio</label>
+                        </td>
+                        <td>
+                            <input id="outputRadio" type="range" min="3" max="15" value="5" onchange="show(index)">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <label for="lineWidth">Line width</label>
+                        </td>
+                        <td>
+                            <input id="lineWidth" type="range" min="1" max="10" value="2" onchange="show(index)">
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div class="expand_control_box">
+                <table>
+                    <tr>
+                        <td>
+                            <label for="dx">DX</label>
+                        </td>
+                        <td>
+                            <input id="dx" type="range" min="5" max="500" value="200" onchange="show(index)">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <label for="dy">DY</label>
+                        </td>
+                        <td>
+                            <input id="dy" type="range" min="5" max="500" value="35" onchange="show(index)">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <label for="margin">Margin</label>
+                        </td>
+                        <td>
+                            <input id="margin" type="range" min="5" max="200" value="100" onchange="show(index)">
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div class="expand_control_box">
+                <table>
+                    <tr>
+                        <td>
+                            <label for="useBezier">Use bezier</label>
+                        </td>
+                        <td>
+                            <input type="checkbox" id="useBezier" checked onchange="show(index)">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <label for="fontSize">Font size</label>
+                        </td>
+                        <td>
+                            <input id="fontSize" type="range" min="8" max="30" value="13" onchange="show(index)">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <label for="scale">Scale</label>
+                        </td>
+                        <td>
+                            <input id="scale" type="range" min="5" max="200" value="100" onchange="show(index); document.getElementById('scaleS').value = this.value">
+                            <input id="scaleS" type="number" min="5" max="200" value="100" onchange="document.getElementById('scale').value = this.value; show(index)">
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div class="file_loader">
+                <input id="json_input" type="file">
+                <div>Load file</div>
+            </div>
+        </nav>
+        <nav id="list_box">
+        </nav>
+        <section>
+            <canvas id="output"></canvas>
+        </section>
+    </body>
+</html>

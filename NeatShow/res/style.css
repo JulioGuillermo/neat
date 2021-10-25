@@ -1,0 +1,114 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    color: #345;
+}
+
+nav {
+    background-color: #fff;
+    box-shadow: 5px 5px 20px rgba(0, 0, 0, 0.5);
+}
+
+#controls {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2cm;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-left: 0.5cm;
+    padding-right: 0.5cm;
+}
+
+/*#controls .expand_control_box {
+    flex: 1;
+}
+
+#controls .expand_control_box table {
+    width: 100%;
+}
+
+#controls .expand_control_box table input {
+    width: 100%;
+}*/
+
+#controls .file_loader {
+    box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.3);
+    border-radius: 10px;
+    padding: 0.3cm;
+    position: relative;
+    width: 3cm;
+    height: 1cm;
+}
+
+.file_loader input {
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 30px;
+    z-index: 3;
+    outline: none;
+}
+
+.file_loader div {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 10px;
+    background: #fff;
+    z-index: 4;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #000;
+    pointer-events: none;
+}
+
+#list_box {
+    position: fixed;
+    left: 0;
+    top: 2cm;
+    bottom: 0;
+    width: 5cm;
+    z-index: 2;
+    padding: 0.5cm;
+    overflow: auto;
+}
+
+.list_item {
+    background: #fff;
+    padding: 0.2cm;
+    margin: 0.3cm;
+    border-radius: 10px;
+    box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.4);
+    transition: ease-in-out 0.1s;
+}
+
+.list_item:hover {
+    transform: scale(1.3);
+}
+
+.list_item:active {
+    background: #08f;
+    color: #fff;
+    transform: scale(1.3);
+}
+
+section {
+    padding-left: 6cm;
+    padding-top: 3cm;
+}
+
+canvas {
+    box-shadow: 5px 5px 20px rgba(0, 0, 0, 0.5);
+    border-radius: 10px;
+}
