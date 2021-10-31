@@ -88,7 +88,7 @@ func (self *Neuron) Mutate(neuron *Neuron, newNeuronRate, mutSize float64) *Neur
         if probability(newNeuronRate) {
             // add a new neuron in that connection
             newNeuron := MakeNeuron()
-            newNeuron.Bias = randScaleWeight(mutSize)
+            newNeuron.Bias = 0.0
             newNeuron.Weights = []float64{1.0}
             newNeuron.Connections = []*Neuron{self.Connections[neuron_index]}
             newNeuron.Reset()
