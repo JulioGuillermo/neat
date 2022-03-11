@@ -5,6 +5,7 @@ import (
 )
 
 type NEAT struct {
+	Recurrent  bool
 	InputSize  int
 	OutputSize int
 
@@ -25,14 +26,15 @@ type NEAT struct {
 // Constructor
 func MakeNEAT(InputSize, OutputSize, PopulationSize, Survivors int,
 	MutRate, MutSize, ChangeBiasRate, NewNeuronRate float64,
-	activation Activation) *NEAT {
+	activation Activation, Recurrent bool) *NEAT {
 	population := make([]*Individual, PopulationSize)
 
 	for i := 0; i < PopulationSize; i++ {
-		population[i] = MakeIndividual(InputSize, OutputSize)
+		population[i] = MakeIndividual(InputSize, OutputSize, Recurrent)
 	}
 
 	return &NEAT{
+		Recurrent:      Recurrent,
 		InputSize:      InputSize,
 		OutputSize:     OutputSize,
 		PopulationSize: PopulationSize,
@@ -51,19 +53,19 @@ func MakeNEAT(InputSize, OutputSize, PopulationSize, Survivors int,
 }
 
 // Evolution
-func (self *NEAT) cross(father, mother *Individual) *Individual {
-	baby := MakeIndividual(self.InputSize, self.OutputSize)
+func (neat *NEAT) cross(father, mother *Individual) *Individual {
+	baby := MakeIndividual(neat.InputSize, neat.OutputSize, neat.Recurrent)
 
 	// Create baby neurons
 	neuronsLen := len(father.Neurons)
-	baby.Neurons = make([]*Neuron, neuronsLen)
+	baby.Neurons = make([]TNeuron, neuronsLen)
 	neuronsRef := make([]bool, neuronsLen)
 	for i := 0; i < neuronsLen; i++ {
-		baby.Neurons[i] = MakeNamedNeuron(father.Neurons[i].Name)
+		baby.Neurons[i] = MakeNamedNeuron(father.Neurons[i].GetName())
 	}
 
 	// Clone parent neurons to baby
-	var neuron, fatherNeuron, motherNeuron *Neuron
+	var neuron, fatherNeuron, motherNeuron TNeuron
 	var fatherConnections, motherConnections []int
 	var connectionsLen int
 	for i := 0; i < neuronsLen; i++ {
@@ -71,7 +73,7 @@ func (self *NEAT) cross(father, mother *Individual) *Individual {
 
 		fatherNeuron = father.Neurons[i]
 		fatherConnections = fatherNeuron.GetConnectionsIndex(father.Neurons)
-		connectionsLen = len(fatherNeuron.Connections)
+		connectionsLen = fatherNeuron.ConnectionsLength()
 
 		if i < len(mother.Neurons) {
 			motherNeuron = mother.Neurons[i]
@@ -83,9 +85,9 @@ func (self *NEAT) cross(father, mother *Individual) *Individual {
 
 		// Set bias
 		if probability(0.5) {
-			neuron.Bias = fatherNeuron.Bias
+			neuron.SetBias(fatherNeuron.GetBias())
 		} else {
-			neuron.Bias = motherNeuron.Bias
+			neuron.SetBias(motherNeuron.GetBias())
 		}
 
 		// Set connections
@@ -106,21 +108,21 @@ func (self *NEAT) cross(father, mother *Individual) *Individual {
 				if probability(0.5) && !checkLoops(neuron, baby.Neurons[motherConnections[j]]) {
 					//neuron.Weights[j] = motherNeuron.Weights[j]
 					//neuron.Connections[j] = baby.Neurons[motherConnections[j]]
-					neuron.Weights = append(neuron.Weights, motherNeuron.Weights[j])
-					neuron.Connections = append(neuron.Connections, baby.Neurons[motherConnections[j]])
+					neuron.SetWeights(append(neuron.GetWeights(), motherNeuron.GetWeight(j)))
+					neuron.SetConnections(append(neuron.GetConnections(), baby.Neurons[motherConnections[j]]))
 					neuronsRef[motherConnections[j]] = true
 				} else if !checkLoops(neuron, baby.Neurons[fatherConnections[j]]) {
 					//neuron.Weights[j] = fatherNeuron.Weights[j]
 					//neuron.Connections[j] = baby.Neurons[fatherConnections[j]]
-					neuron.Weights = append(neuron.Weights, fatherNeuron.Weights[j])
-					neuron.Connections = append(neuron.Connections, baby.Neurons[fatherConnections[j]])
+					neuron.SetWeights(append(neuron.GetWeights(), fatherNeuron.GetWeight(j)))
+					neuron.SetConnections(append(neuron.GetConnections(), baby.Neurons[fatherConnections[j]]))
 					neuronsRef[fatherConnections[j]] = true
 				}
 			} else if !checkLoops(neuron, baby.Neurons[fatherConnections[j]]) {
 				//neuron.Weights[j] = fatherNeuron.Weights[j]
 				//neuron.Connections[j] = baby.Neurons[fatherConnections[j]]
-				neuron.Weights = append(neuron.Weights, fatherNeuron.Weights[j])
-				neuron.Connections = append(neuron.Connections, baby.Neurons[fatherConnections[j]])
+				neuron.SetWeights(append(neuron.GetWeights(), fatherNeuron.GetWeight(j)))
+				neuron.SetConnections(append(neuron.GetConnections(), baby.Neurons[fatherConnections[j]]))
 				neuronsRef[fatherConnections[j]] = true
 			}
 		}
@@ -135,106 +137,89 @@ func (self *NEAT) cross(father, mother *Individual) *Individual {
 	}
 	baby.Neurons = neurons
 
-	if probability(self.MutRate) {
-		baby.Mutate(self.NewNeuronRate, self.ChangeBiasRate, self.MutSize)
+	if probability(neat.MutRate) {
+		baby.Mutate(neat.NewNeuronRate, neat.ChangeBiasRate, neat.MutSize)
 	}
 
 	return baby
 }
 
-func (self *NEAT) NextGeneration() {
-	self.Generation++
+func (neat *NEAT) NextGeneration() {
+	neat.Generation++
 
 	// Sort population by fitness
-	sort.SliceStable(self.Population, func(x, y int) bool {
-		return self.Population[x].GetFitness() > self.Population[y].GetFitness()
+	sort.SliceStable(neat.Population, func(x, y int) bool {
+		return neat.Population[x].GetFitness() > neat.Population[y].GetFitness()
 	})
 
 	// Reset fitness
-	for i := 0; i < self.PopulationSize; i++ {
-		self.Population[i].SetFitness(0)
+	for i := 0; i < neat.PopulationSize; i++ {
+		neat.Population[i].SetFitness(0)
 	}
 
 	// Create the new generation
 	var father, mother int
-	for i := self.Survivors; i < self.PopulationSize; i++ {
+	for i := neat.Survivors; i < neat.PopulationSize; i++ {
 		// Select father and mother from survivors
-		father = randInt(self.Survivors)
-		mother = randInt(self.Survivors)
+		father = randInt(neat.Survivors)
+		mother = randInt(neat.Survivors)
 		for father == mother {
-			mother = randInt(self.Survivors)
+			mother = randInt(neat.Survivors)
 		}
 		if father > mother {
 			father, mother = mother, father
 		}
 
 		// Create the new individual
-		self.Population[i] = self.cross(self.Population[father], self.Population[mother])
+		neat.Population[i] = neat.cross(neat.Population[father], neat.Population[mother])
 	}
 }
 
 // Output
-func (self *NEAT) Output(index int, input []float64) []float64 {
-	return self.Population[index].Output(self.Activation, input)
+func (neat *NEAT) Output(index int, input []float64) []float64 {
+	return neat.Population[index].Output(neat.Activation, input)
 }
 
 // Fitness
-func (self *NEAT) GetFitness(index int) float64 {
-	return self.Population[index].GetFitness()
+func (neat *NEAT) GetFitness(index int) float64 {
+	return neat.Population[index].GetFitness()
 }
 
-func (self *NEAT) SetFitness(index int, fitness float64) {
-	self.Population[index].SetFitness(fitness)
+func (neat *NEAT) SetFitness(index int, fitness float64) {
+	neat.Population[index].SetFitness(fitness)
 }
 
-func (self *NEAT) AddFitness(index int, fitness float64) {
-	self.Population[index].AddFitness(fitness)
+func (neat *NEAT) AddFitness(index int, fitness float64) {
+	neat.Population[index].AddFitness(fitness)
 }
 
 // Generation
-func (self *NEAT) GetGeneration() int {
-	return self.Generation
+func (neat *NEAT) GetGeneration() int {
+	return neat.Generation
 }
 
 // Serialization
-type JsonNEAT struct {
-	InputSize  int `json:"input_size"`
-	OutputSize int `json:"output_size"`
-
-	PopulationSize int `json:"population_size"`
-	Survivors      int `json:"survivors"`
-
-	MutRate        float64 `json:"mutation_rate"`
-	MutSize        float64 `json:"mutation_size"`
-	ChangeBiasRate float64 `json:"change_bias_rate"`
-	NewNeuronRate  float64 `json:"new_neuron_rate"`
-
-	Activation string `json:"activation"`
-
-	Generation int              `json:"generation"`
-	Population []JsonIndividual `json:"population"`
-}
-
-func (self *NEAT) GetJsonNEAT() JsonNEAT {
-	population := make([]JsonIndividual, self.PopulationSize)
-	for i := 0; i < self.PopulationSize; i++ {
-		population[i] = self.Population[i].GetJsonIndividual()
+func (neat *NEAT) GetJsonNEAT() JsonNEAT {
+	population := make([]JsonIndividual, neat.PopulationSize)
+	for i := 0; i < neat.PopulationSize; i++ {
+		population[i] = neat.Population[i].GetJsonIndividual()
 	}
 	return JsonNEAT{
-		InputSize:  self.InputSize,
-		OutputSize: self.OutputSize,
+		Recurrent:  neat.Recurrent,
+		InputSize:  neat.InputSize,
+		OutputSize: neat.OutputSize,
 
-		PopulationSize: self.PopulationSize,
-		Survivors:      self.Survivors,
+		PopulationSize: neat.PopulationSize,
+		Survivors:      neat.Survivors,
 
-		MutRate:        self.MutRate,
-		MutSize:        self.MutSize,
-		ChangeBiasRate: self.ChangeBiasRate,
-		NewNeuronRate:  self.NewNeuronRate,
+		MutRate:        neat.MutRate,
+		MutSize:        neat.MutSize,
+		ChangeBiasRate: neat.ChangeBiasRate,
+		NewNeuronRate:  neat.NewNeuronRate,
 
-		Activation: self.Activation.GetString(),
+		Activation: neat.Activation.GetString(),
 
-		Generation: self.Generation,
+		Generation: neat.Generation,
 		Population: population,
 	}
 }
@@ -246,6 +231,7 @@ func MakeNEATFromJsonNEAT(jsonNeat JsonNEAT) *NEAT {
 	}
 
 	return &NEAT{
+		Recurrent:  jsonNeat.Recurrent,
 		InputSize:  jsonNeat.InputSize,
 		OutputSize: jsonNeat.OutputSize,
 
@@ -264,6 +250,6 @@ func MakeNEATFromJsonNEAT(jsonNeat JsonNEAT) *NEAT {
 	}
 }
 
-func (self *NEAT) Save(path string) error {
-	return Save(self, path)
+func (neat *NEAT) Save(path string) error {
+	return Save(neat, path)
 }

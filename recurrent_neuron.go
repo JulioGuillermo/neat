@@ -1,89 +1,97 @@
 package neat
 
-type Neuron struct {
-	Name        string
-	Bias        float64
-	Weights     []float64
-	Connections []TNeuron
+type RecurrentNeuron struct {
+	Name            string
+	Bias            float64
+	RecurrentWeight float64
+	Weights         []float64
+	Connections     []TNeuron
 
-	output  float64
-	control bool
+	old_output float64
+	output     float64
+	control    bool
 }
 
-func MakeNeuron() *Neuron {
-	return &Neuron{
+func MakeRecurrentNeuron() *RecurrentNeuron {
+	return &RecurrentNeuron{
 		Bias:        randWeight(),
 		Weights:     []float64{},
 		Connections: []TNeuron{},
+
+		old_output: 0,
 	}
 }
 
-func MakeNamedNeuron(name string) *Neuron {
-	return &Neuron{
+func MakeNamedRecurrentNeuron(name string) *RecurrentNeuron {
+	return &RecurrentNeuron{
 		Name:        name,
 		Bias:        randWeight(),
 		Weights:     []float64{},
 		Connections: []TNeuron{},
+
+		old_output: 0,
 	}
 }
 
-func (neuron *Neuron) SetName(name string) {
+func (neuron *RecurrentNeuron) SetName(name string) {
 	neuron.Name = name
 }
 
-func (neuron *Neuron) GetName() string {
+func (neuron *RecurrentNeuron) GetName() string {
 	return neuron.Name
 }
 
-func (neuron *Neuron) SetBias(bias float64) {
+func (neuron *RecurrentNeuron) SetBias(bias float64) {
 	neuron.Bias = bias
 }
 
-func (neuron *Neuron) GetBias() float64 {
+func (neuron *RecurrentNeuron) GetBias() float64 {
 	return neuron.Bias
 }
 
-func (neuron *Neuron) SetWeights(weights []float64) {
+func (neuron *RecurrentNeuron) SetWeights(weights []float64) {
 	neuron.Weights = weights
 }
 
-func (neuron *Neuron) GetWeights() []float64 {
+func (neuron *RecurrentNeuron) GetWeights() []float64 {
 	return neuron.Weights
 }
 
-func (neuron *Neuron) GetWeight(i int) float64 {
+func (neuron *RecurrentNeuron) GetWeight(i int) float64 {
 	return neuron.Weights[i]
 }
 
-func (neuron *Neuron) GetConnections() []TNeuron {
+func (neuron *RecurrentNeuron) GetConnections() []TNeuron {
 	return neuron.Connections
 }
 
-func (neuron *Neuron) SetConnections(c []TNeuron) {
+func (neuron *RecurrentNeuron) SetConnections(c []TNeuron) {
 	neuron.Connections = c
 }
 
 // Output methods
-func (neuron *Neuron) Reset() {
+func (neuron *RecurrentNeuron) Reset() {
 	neuron.control = false
 }
 
-func (neuron *Neuron) SetOutput(output float64) {
+func (neuron *RecurrentNeuron) SetOutput(output float64) {
 	// For the input neurons
 	neuron.control = true
 	neuron.output = output
 }
 
-func (neuron *Neuron) CalOutput(activation Activation) {
+func (neuron *RecurrentNeuron) CalOutput(activation Activation) {
 	neuron.output = neuron.Bias
+	neuron.output += neuron.RecurrentWeight * neuron.old_output
 	for i := 0; i < len(neuron.Connections); i++ {
 		neuron.output += neuron.Connections[i].Output(activation) * neuron.Weights[i]
 	}
 	neuron.output = activation.Activate(neuron.output)
 	neuron.control = true
+	neuron.old_output = neuron.output
 }
 
-func (neuron *Neuron) Output(activation Activation) float64 {
+func (neuron *RecurrentNeuron) Output(activation Activation) float64 {
 	if !neuron.control {
 		neuron.CalOutput(activation)
 	}
@@ -91,7 +99,7 @@ func (neuron *Neuron) Output(activation Activation) float64 {
 }
 
 // Connections
-func (neuron *Neuron) GetConnectionsIndex(neurons []TNeuron) []int {
+func (neuron *RecurrentNeuron) GetConnectionsIndex(neurons []TNeuron) []int {
 	index := make([]int, len(neuron.Connections))
 	for i := 0; i < len(neuron.Connections); i++ {
 		index[i] = getIndex(neuron.Connections[i], neurons)
@@ -99,20 +107,20 @@ func (neuron *Neuron) GetConnectionsIndex(neurons []TNeuron) []int {
 	return index
 }
 
-func (neuron *Neuron) ConnectionsLength() int {
+func (neuron *RecurrentNeuron) ConnectionsLength() int {
 	return len(neuron.Connections)
 }
 
-func (neuron *Neuron) GetConnection(i int) TNeuron {
+func (neuron *RecurrentNeuron) GetConnection(i int) TNeuron {
 	return neuron.Connections[i]
 }
 
 // Mutations methods
-func (neuron *Neuron) HasConnections() bool {
+func (neuron *RecurrentNeuron) HasConnections() bool {
 	return len(neuron.Connections) > 0
 }
 
-func (neuron *Neuron) find(n TNeuron) int {
+func (neuron *RecurrentNeuron) find(n TNeuron) int {
 	for i := 0; i < len(neuron.Connections); i++ {
 		if n == neuron.Connections[i] {
 			return i
@@ -121,7 +129,7 @@ func (neuron *Neuron) find(n TNeuron) int {
 	return -1
 }
 
-func (neuron *Neuron) Mutate(n TNeuron, newNeuronRate, mutSize float64) TNeuron {
+func (neuron *RecurrentNeuron) Mutate(n TNeuron, newNeuronRate, mutSize float64) TNeuron {
 	neuron_index := neuron.find(n)
 	if neuron_index == -1 {
 		// there is not connection to the given neuron
@@ -131,7 +139,7 @@ func (neuron *Neuron) Mutate(n TNeuron, newNeuronRate, mutSize float64) TNeuron 
 		// there is a connection to the given neuron
 		if probability(newNeuronRate) {
 			// add a new neuron in that connection
-			newNeuron := MakeNeuron()
+			newNeuron := MakeRecurrentNeuron()
 			newNeuron.Bias = 0.0
 			newNeuron.Weights = []float64{1.0}
 			newNeuron.Connections = []TNeuron{neuron.Connections[neuron_index]}
@@ -145,20 +153,25 @@ func (neuron *Neuron) Mutate(n TNeuron, newNeuronRate, mutSize float64) TNeuron 
 	return nil
 }
 
-func (neuron *Neuron) MutateBias(mutSize float64) {
-	neuron.Bias += randScaleWeight(mutSize)
-}
-
-// Serialize
-func MakeNeuronFromJson(jsonNeuron JsonNeuron) *Neuron {
-	return &Neuron{
-		Name:    jsonNeuron.Name,
-		Bias:    jsonNeuron.Bias,
-		Weights: jsonNeuron.Weights,
+func (neuron *RecurrentNeuron) MutateBias(mutSize float64) {
+	if probability(0.5) {
+		neuron.RecurrentWeight += randScaleWeight(mutSize)
+	} else {
+		neuron.Bias += randScaleWeight(mutSize)
 	}
 }
 
-func (neuron *Neuron) SetConnectionsFromIndex(neurons []TNeuron, index []int) {
+// Serialize
+func MakeRecurrentNeuronFromJson(jsonNeuron JsonNeuron) *RecurrentNeuron {
+	return &RecurrentNeuron{
+		Name:            jsonNeuron.Name,
+		Bias:            jsonNeuron.Bias,
+		RecurrentWeight: jsonNeuron.RWeight,
+		Weights:         jsonNeuron.Weights,
+	}
+}
+
+func (neuron *RecurrentNeuron) SetConnectionsFromIndex(neurons []TNeuron, index []int) {
 	connectionsLen := len(index)
 	neuron.Connections = make([]TNeuron, connectionsLen)
 	for i := 0; i < connectionsLen; i++ {
@@ -166,10 +179,11 @@ func (neuron *Neuron) SetConnectionsFromIndex(neurons []TNeuron, index []int) {
 	}
 }
 
-func (neuron *Neuron) GetJsonNeuron(neurons []TNeuron) JsonNeuron {
+func (neuron *RecurrentNeuron) GetJsonNeuron(neurons []TNeuron) JsonNeuron {
 	return JsonNeuron{
 		Name:        neuron.Name,
 		Bias:        neuron.Bias,
+		RWeight:     neuron.RecurrentWeight,
 		Weights:     neuron.Weights,
 		Connections: neuron.GetConnectionsIndex(neurons),
 	}
