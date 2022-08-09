@@ -179,8 +179,36 @@ func (neat *NEAT) NextGeneration() {
 }
 
 // Output
-func (neat *NEAT) Output(index int, input []float64) []float64 {
-	return neat.Population[index].Output(neat.Activation, input)
+func (neat *NEAT) Output(individual_index int, input []float64) []float64 {
+	return neat.Population[individual_index].Output(neat.Activation, input)
+}
+
+func (neat *NEAT) MaxOutput(individual_index int, input []float64) (value float64, index int) {
+	output := neat.Output(individual_index, input)
+
+	index = 0
+	value = output[0]
+	for i, v := range output {
+		if value < v {
+			index = i
+			value = v
+		}
+	}
+	return
+}
+
+func (neat *NEAT) MinOutput(individual_index int, input []float64) (value float64, index int) {
+	output := neat.Output(individual_index, input)
+
+	index = 0
+	value = output[0]
+	for i, v := range output {
+		if value > v {
+			index = i
+			value = v
+		}
+	}
+	return
 }
 
 // Fitness
