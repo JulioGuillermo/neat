@@ -284,3 +284,7 @@ func MakeNEATFromSerializedNEAT(serializedNeat SerializedNEAT) *NEAT {
 func (neat *NEAT) SaveAsJson(path string) error {
 	return SaveAsJson(neat, path)
 }
+
+func (neat *NEAT) SaveAsBin(path string) error {
+	return SaveAsBin(neat, path)
+}
