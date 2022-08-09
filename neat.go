@@ -144,13 +144,16 @@ func (neat *NEAT) cross(father, mother *Individual) *Individual {
 	return baby
 }
 
-func (neat *NEAT) NextGeneration() {
-	neat.Generation++
-
+func (neat *NEAT) Sort() {
 	// Sort population by fitness
 	sort.SliceStable(neat.Population, func(x, y int) bool {
 		return neat.Population[x].GetFitness() > neat.Population[y].GetFitness()
 	})
+}
+
+func (neat *NEAT) NextGeneration() {
+	neat.Generation++
+	neat.Sort()
 
 	// Reset fitness
 	for i := 0; i < neat.PopulationSize; i++ {
