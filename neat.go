@@ -24,13 +24,13 @@ type NEAT struct {
 }
 
 // Constructor
-func MakeNEAT(InputSize, OutputSize, PopulationSize, Survivors int,
+func NewNEAT(InputSize, OutputSize, PopulationSize, Survivors int,
 	MutRate, MutSize, ChangeBiasRate, NewNeuronRate float64,
 	activation Activation, Recurrent bool) *NEAT {
 	population := make([]*Individual, PopulationSize)
 
 	for i := 0; i < PopulationSize; i++ {
-		population[i] = MakeIndividual(InputSize, OutputSize, Recurrent)
+		population[i] = NewIndividual(InputSize, OutputSize, Recurrent)
 	}
 
 	return &NEAT{
@@ -54,14 +54,14 @@ func MakeNEAT(InputSize, OutputSize, PopulationSize, Survivors int,
 
 // Evolution
 func (neat *NEAT) cross(father, mother *Individual) *Individual {
-	baby := MakeIndividual(neat.InputSize, neat.OutputSize, neat.Recurrent)
+	baby := NewIndividual(neat.InputSize, neat.OutputSize, neat.Recurrent)
 
 	// Create baby neurons
 	neuronsLen := len(father.Neurons)
 	baby.Neurons = make([]TNeuron, neuronsLen)
 	neuronsRef := make([]bool, neuronsLen)
 	for i := 0; i < neuronsLen; i++ {
-		baby.Neurons[i] = MakeNamedNeuron(father.Neurons[i].GetName())
+		baby.Neurons[i] = NewNamedNeuron(father.Neurons[i].GetName())
 	}
 
 	// Clone parent neurons to baby
@@ -199,12 +199,12 @@ func (neat *NEAT) GetGeneration() int {
 }
 
 // Serialization
-func (neat *NEAT) GetJsonNEAT() JsonNEAT {
-	population := make([]JsonIndividual, neat.PopulationSize)
+func (neat *NEAT) GetSerializedNEAT() SerializedNEAT {
+	population := make([]SerializedIndividual, neat.PopulationSize)
 	for i := 0; i < neat.PopulationSize; i++ {
-		population[i] = neat.Population[i].GetJsonIndividual()
+		population[i] = neat.Population[i].GetSerializedIndividual()
 	}
-	return JsonNEAT{
+	return SerializedNEAT{
 		Recurrent:  neat.Recurrent,
 		InputSize:  neat.InputSize,
 		OutputSize: neat.OutputSize,
@@ -224,32 +224,32 @@ func (neat *NEAT) GetJsonNEAT() JsonNEAT {
 	}
 }
 
-func MakeNEATFromJsonNEAT(jsonNeat JsonNEAT) *NEAT {
-	population := make([]*Individual, jsonNeat.PopulationSize)
-	for i := 0; i < jsonNeat.PopulationSize; i++ {
-		population[i] = MakeIndividualFromJson(jsonNeat.Population[i], jsonNeat.InputSize, jsonNeat.OutputSize)
+func MakeNEATFromSerializedNEAT(serializedNeat SerializedNEAT) *NEAT {
+	population := make([]*Individual, serializedNeat.PopulationSize)
+	for i := 0; i < serializedNeat.PopulationSize; i++ {
+		population[i] = MakeIndividualFromSerialized(serializedNeat.Population[i], serializedNeat.InputSize, serializedNeat.OutputSize)
 	}
 
 	return &NEAT{
-		Recurrent:  jsonNeat.Recurrent,
-		InputSize:  jsonNeat.InputSize,
-		OutputSize: jsonNeat.OutputSize,
+		Recurrent:  serializedNeat.Recurrent,
+		InputSize:  serializedNeat.InputSize,
+		OutputSize: serializedNeat.OutputSize,
 
-		PopulationSize: jsonNeat.PopulationSize,
-		Survivors:      jsonNeat.Survivors,
+		PopulationSize: serializedNeat.PopulationSize,
+		Survivors:      serializedNeat.Survivors,
 
-		MutRate:        jsonNeat.MutRate,
-		MutSize:        jsonNeat.MutSize,
-		ChangeBiasRate: jsonNeat.ChangeBiasRate,
-		NewNeuronRate:  jsonNeat.NewNeuronRate,
+		MutRate:        serializedNeat.MutRate,
+		MutSize:        serializedNeat.MutSize,
+		ChangeBiasRate: serializedNeat.ChangeBiasRate,
+		NewNeuronRate:  serializedNeat.NewNeuronRate,
 
-		Activation: GetActivation(jsonNeat.Activation),
+		Activation: GetActivation(serializedNeat.Activation),
 
-		Generation: jsonNeat.Generation,
+		Generation: serializedNeat.Generation,
 		Population: population,
 	}
 }
 
-func (neat *NEAT) Save(path string) error {
-	return Save(neat, path)
+func (neat *NEAT) SaveAsJson(path string) error {
+	return SaveAsJson(neat, path)
 }

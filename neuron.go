@@ -10,7 +10,7 @@ type Neuron struct {
 	control bool
 }
 
-func MakeNeuron() *Neuron {
+func NewNeuron() *Neuron {
 	return &Neuron{
 		Bias:        randWeight(),
 		Weights:     []float64{},
@@ -18,7 +18,7 @@ func MakeNeuron() *Neuron {
 	}
 }
 
-func MakeNamedNeuron(name string) *Neuron {
+func NewNamedNeuron(name string) *Neuron {
 	return &Neuron{
 		Name:        name,
 		Bias:        randWeight(),
@@ -131,7 +131,7 @@ func (neuron *Neuron) Mutate(n TNeuron, newNeuronRate, mutSize float64) TNeuron 
 		// there is a connection to the given neuron
 		if probability(newNeuronRate) {
 			// add a new neuron in that connection
-			newNeuron := MakeNeuron()
+			newNeuron := NewNeuron()
 			newNeuron.Bias = 0.0
 			newNeuron.Weights = []float64{1.0}
 			newNeuron.Connections = []TNeuron{neuron.Connections[neuron_index]}
@@ -150,11 +150,11 @@ func (neuron *Neuron) MutateBias(mutSize float64) {
 }
 
 // Serialize
-func MakeNeuronFromJson(jsonNeuron JsonNeuron) *Neuron {
+func MakeNeuronFromSerialized(serializedNeuron SerializedNeuron) *Neuron {
 	return &Neuron{
-		Name:    jsonNeuron.Name,
-		Bias:    jsonNeuron.Bias,
-		Weights: jsonNeuron.Weights,
+		Name:    serializedNeuron.Name,
+		Bias:    serializedNeuron.Bias,
+		Weights: serializedNeuron.Weights,
 	}
 }
 
@@ -166,8 +166,8 @@ func (neuron *Neuron) SetConnectionsFromIndex(neurons []TNeuron, index []int) {
 	}
 }
 
-func (neuron *Neuron) GetJsonNeuron(neurons []TNeuron) JsonNeuron {
-	return JsonNeuron{
+func (neuron *Neuron) GetSerializedNeuron(neurons []TNeuron) SerializedNeuron {
+	return SerializedNeuron{
 		Name:        neuron.Name,
 		Bias:        neuron.Bias,
 		Weights:     neuron.Weights,

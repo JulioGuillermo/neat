@@ -10,30 +10,30 @@ type Individual struct {
 	Neurons []TNeuron
 }
 
-func MakeIndividual(InputSize, OutputSize int, Recurrent bool) *Individual {
+func NewIndividual(InputSize, OutputSize int, Recurrent bool) *Individual {
 	neurons := []TNeuron{}
 
 	if Recurrent {
 		// Make input neurons
 		// They are the firsts neurons in the neurons array
 		for i := 0; i < InputSize; i++ {
-			neurons = append(neurons, MakeNamedRecurrentNeuron(inputName(i)))
+			neurons = append(neurons, NewNamedRecurrentNeuron(inputName(i)))
 		}
 		// Make output neurons
 		// They are the firsts neurons after the inputs neurons in the neurons array
 		for i := 0; i < OutputSize; i++ {
-			neurons = append(neurons, MakeNamedRecurrentNeuron(outputName(i)))
+			neurons = append(neurons, NewNamedRecurrentNeuron(outputName(i)))
 		}
 	} else {
 		// Make input neurons
 		// They are the firsts neurons in the neurons array
 		for i := 0; i < InputSize; i++ {
-			neurons = append(neurons, MakeNamedNeuron(inputName(i)))
+			neurons = append(neurons, NewNamedNeuron(inputName(i)))
 		}
 		// Make output neurons
 		// They are the firsts neurons after the inputs neurons in the neurons array
 		for i := 0; i < OutputSize; i++ {
-			neurons = append(neurons, MakeNamedNeuron(outputName(i)))
+			neurons = append(neurons, NewNamedNeuron(outputName(i)))
 		}
 	}
 
@@ -103,35 +103,35 @@ func (individual *Individual) AddFitness(fitness float64) {
 }
 
 // Serialization
-func MakeIndividualFromJson(jsonIndividual JsonIndividual, inputSize, outputSize int) *Individual {
-	neuronsLen := len(jsonIndividual.Neurons)
+func MakeIndividualFromSerialized(serializedIndividual SerializedIndividual, inputSize, outputSize int) *Individual {
+	neuronsLen := len(serializedIndividual.Neurons)
 	neurons := make([]TNeuron, neuronsLen)
 
 	for i := 0; i < neuronsLen; i++ {
-		neurons[i] = MakeNeuronFromJson(jsonIndividual.Neurons[i])
+		neurons[i] = MakeNeuronFromSerialized(serializedIndividual.Neurons[i])
 	}
 	for i := 0; i < neuronsLen; i++ {
-		neurons[i].SetConnectionsFromIndex(neurons, jsonIndividual.Neurons[i].Connections)
+		neurons[i].SetConnectionsFromIndex(neurons, serializedIndividual.Neurons[i].Connections)
 	}
 
 	return &Individual{
-		Recurrent:  jsonIndividual.Recurrent,
+		Recurrent:  serializedIndividual.Recurrent,
 		InputSize:  inputSize,
 		OutputSize: outputSize,
-		Fitness:    jsonIndividual.Fitness,
+		Fitness:    serializedIndividual.Fitness,
 		Neurons:    neurons,
 	}
 }
 
-func (individual *Individual) GetJsonIndividual() JsonIndividual {
+func (individual *Individual) GetSerializedIndividual() SerializedIndividual {
 	neuronsLen := len(individual.Neurons)
-	neurons := make([]JsonNeuron, neuronsLen)
+	neurons := make([]SerializedNeuron, neuronsLen)
 
 	for i := 0; i < neuronsLen; i++ {
-		neurons[i] = individual.Neurons[i].GetJsonNeuron(individual.Neurons)
+		neurons[i] = individual.Neurons[i].GetSerializedNeuron(individual.Neurons)
 	}
 
-	return JsonIndividual{
+	return SerializedIndividual{
 		Recurrent: individual.Recurrent,
 		Fitness:   individual.Fitness,
 		Neurons:   neurons,

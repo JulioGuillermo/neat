@@ -1,13 +1,15 @@
 package neat
 
 import (
+	"bytes"
+	"encoding/gob"
 	"encoding/json"
 	"io/ioutil"
 	"os"
 )
 
 // Serializers
-type JsonNeuron struct {
+type SerializedNeuron struct {
 	Name        string    `json:"name"`
 	Bias        float64   `json:"bias"`
 	RWeight     float64   `json:"r_weight"`
@@ -15,13 +17,13 @@ type JsonNeuron struct {
 	Connections []int     `json:"connections"`
 }
 
-type JsonIndividual struct {
-	Recurrent bool         `json:"recurrent"`
-	Fitness   float64      `json:"fitness"`
-	Neurons   []JsonNeuron `json:"neurons"`
+type SerializedIndividual struct {
+	Recurrent bool               `json:"recurrent"`
+	Fitness   float64            `json:"fitness"`
+	Neurons   []SerializedNeuron `json:"neurons"`
 }
 
-type JsonNEAT struct {
+type SerializedNEAT struct {
 	Recurrent  bool `json:"recurrent"`
 	InputSize  int  `json:"input_size"`
 	OutputSize int  `json:"output_size"`
@@ -36,12 +38,12 @@ type JsonNEAT struct {
 
 	Activation string `json:"activation"`
 
-	Generation int              `json:"generation"`
-	Population []JsonIndividual `json:"population"`
+	Generation int                    `json:"generation"`
+	Population []SerializedIndividual `json:"population"`
 }
 
-func Save(neat *NEAT, path string) error {
-	bytes, err := json.Marshal(neat.GetJsonNEAT())
+func SaveAsJson(neat *NEAT, path string) error {
+	bytes, err := json.Marshal(neat.GetSerializedNEAT())
 	if err != nil {
 		return err
 	}
@@ -54,7 +56,7 @@ func Save(neat *NEAT, path string) error {
 	return nil
 }
 
-func Load(path string) (*NEAT, error) {
+func LoadFromJson(path string) (*NEAT, error) {
 	file, err := os.Open(path)
 	if err != nil {
 		return nil, err
@@ -65,11 +67,47 @@ func Load(path string) (*NEAT, error) {
 		return nil, err
 	}
 
-	var jsonNeat JsonNEAT
-	err = decoder.Decode(&jsonNeat)
+	var serializedNeat SerializedNEAT
+	err = decoder.Decode(&serializedNeat)
 	if err != nil {
 		return nil, err
 	}
 
-	return MakeNEATFromJsonNEAT(jsonNeat), nil
+	return MakeNEATFromSerializedNEAT(serializedNeat), nil
+}
+
+func SaveAsBin(neat *NEAT, path string) error {
+	var buff bytes.Buffer
+	enc := gob.NewEncoder(&buff)
+	err := enc.Encode(neat.GetSerializedNEAT())
+	if err != nil {
+		return err
+	}
+
+	err = ioutil.WriteFile(path, buff.Bytes(), 0777)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func LoadFromBin(path string) (*NEAT, error) {
+	file, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+
+	decoder := gob.NewDecoder(file)
+	if err != nil {
+		return nil, err
+	}
+
+	var serializedNeat SerializedNEAT
+	err = decoder.Decode(&serializedNeat)
+	if err != nil {
+		return nil, err
+	}
+
+	return MakeNEATFromSerializedNEAT(serializedNeat), nil
 }

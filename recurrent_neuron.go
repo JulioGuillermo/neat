@@ -12,7 +12,7 @@ type RecurrentNeuron struct {
 	control    bool
 }
 
-func MakeRecurrentNeuron() *RecurrentNeuron {
+func NewRecurrentNeuron() *RecurrentNeuron {
 	return &RecurrentNeuron{
 		Bias:        randWeight(),
 		Weights:     []float64{},
@@ -22,7 +22,7 @@ func MakeRecurrentNeuron() *RecurrentNeuron {
 	}
 }
 
-func MakeNamedRecurrentNeuron(name string) *RecurrentNeuron {
+func NewNamedRecurrentNeuron(name string) *RecurrentNeuron {
 	return &RecurrentNeuron{
 		Name:        name,
 		Bias:        randWeight(),
@@ -139,7 +139,7 @@ func (neuron *RecurrentNeuron) Mutate(n TNeuron, newNeuronRate, mutSize float64)
 		// there is a connection to the given neuron
 		if probability(newNeuronRate) {
 			// add a new neuron in that connection
-			newNeuron := MakeRecurrentNeuron()
+			newNeuron := NewRecurrentNeuron()
 			newNeuron.Bias = 0.0
 			newNeuron.Weights = []float64{1.0}
 			newNeuron.Connections = []TNeuron{neuron.Connections[neuron_index]}
@@ -162,12 +162,12 @@ func (neuron *RecurrentNeuron) MutateBias(mutSize float64) {
 }
 
 // Serialize
-func MakeRecurrentNeuronFromJson(jsonNeuron JsonNeuron) *RecurrentNeuron {
+func MakeRecurrentNeuronFromSerialized(serializedNeuron SerializedNeuron) *RecurrentNeuron {
 	return &RecurrentNeuron{
-		Name:            jsonNeuron.Name,
-		Bias:            jsonNeuron.Bias,
-		RecurrentWeight: jsonNeuron.RWeight,
-		Weights:         jsonNeuron.Weights,
+		Name:            serializedNeuron.Name,
+		Bias:            serializedNeuron.Bias,
+		RecurrentWeight: serializedNeuron.RWeight,
+		Weights:         serializedNeuron.Weights,
 	}
 }
 
@@ -179,8 +179,8 @@ func (neuron *RecurrentNeuron) SetConnectionsFromIndex(neurons []TNeuron, index 
 	}
 }
 
-func (neuron *RecurrentNeuron) GetJsonNeuron(neurons []TNeuron) JsonNeuron {
-	return JsonNeuron{
+func (neuron *RecurrentNeuron) GetSerializedNeuron(neurons []TNeuron) SerializedNeuron {
+	return SerializedNeuron{
 		Name:        neuron.Name,
 		Bias:        neuron.Bias,
 		RWeight:     neuron.RecurrentWeight,

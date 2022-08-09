@@ -28,5 +28,5 @@ type TNeuron interface {
 	MutateBias(float64)
 
 	SetConnectionsFromIndex([]TNeuron, []int)
-	GetJsonNeuron([]TNeuron) JsonNeuron
+	GetSerializedNeuron([]TNeuron) SerializedNeuron
 }
