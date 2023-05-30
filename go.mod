@@ -1,3 +1,3 @@
-module github.com/JulioGuillermo/NEAT
+module github.com/julioguillermo/neat
 
 go 1.17
